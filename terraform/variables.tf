@@ -6,15 +6,11 @@ variable "ami_id" {
 }
 
 variable "instance_type" { default = "t2.micro" }
-variable "key_name"       { default = "karuna-key" }
+variable "key_name"       { default = "kkey-vot" }
 
-variable "existing_instance_profile" {
-  description = "Use the existing EC2 IAM instance profile"
-  default     = "strapi-ec2-role"   # <-- PUT EXACT NAME FROM AWS
-}
 
 variable "ecr_image" {
-  default = "301782007642.dkr.ecr.ap-south-1.amazonaws.com/karunaissa-strapi:latest"
+  default = "713881818561..dkr.ecr.ap-south-1.amazonaws.com/karuna-strapi:latest"
 }
 
 variable "db_identifier"     { default = "karuna-db" }

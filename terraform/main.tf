@@ -119,7 +119,7 @@ resource "aws_instance" "karuna_strapi_ec2" {
   vpc_security_group_ids      = [aws_security_group.ec2_sg.id]
   key_name                    = var.key_name
 
-  iam_instance_profile        = var.existing_instance_profile
+  iam_instance_profile        = "ec2-ecr-access-role "
 
   associate_public_ip_address = true
 

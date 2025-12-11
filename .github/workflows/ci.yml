@@ -19,8 +19,8 @@ jobs:
 
     env:
       AWS_REGION: ap-south-1
-      ECR_REPO: karunaissa-strapi   # your repo name
-      ACCOUNT_ID: 301782007642      # org account ID
+      ECR_REPO: karuna-strapi   # your repo name
+      ACCOUNT_ID: 713881818561      # org account ID
 
     steps:
       - name: Checkout code
