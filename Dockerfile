@@ -13,9 +13,6 @@ RUN npm ci --production=false
 COPY . .
 RUN npm run build
 
-# Remove dev dependencies to reduce size
-RUN npm prune --production
-
 # ---------- RUN STAGE ----------
 FROM node:20-slim
 
