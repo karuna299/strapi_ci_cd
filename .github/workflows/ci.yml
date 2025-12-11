@@ -3,6 +3,11 @@ name: Build & Push Strapi Image to ECR
 on:
   push:
     branches: ["main"]
+    paths:
+      - "Dockerfile"
+      - "src/**"
+      - "package.json"
+      - ".github/workflows/ci.yml"
 
 jobs:
   build-and-push:
