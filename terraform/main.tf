@@ -27,10 +27,41 @@ data "aws_subnets" "default" {
 }
 
 # --------------------------------------------------
+# IAM ROLE + INSTANCE PROFILE
+# --------------------------------------------------
+
+resource "aws_iam_role" "strapi_ec2_role" {
+  name = "karuna-ec2-ecr-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = { Service = "ec2.amazonaws.com" }
+      Action    = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ecr_read" {
+  role       = aws_iam_role.strapi_ec2_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+}
+
+resource "aws_iam_role_policy_attachment" "ssm_core" {
+  role       = aws_iam_role.strapi_ec2_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+resource "aws_iam_instance_profile" "strapi_profile" {
+  name = "karuna-strapi-instance-profile"
+  role = aws_iam_role.strapi_ec2_role.name
+}
+
+# --------------------------------------------------
 # SECURITY GROUPS
 # --------------------------------------------------
 
-# EC2 SG
 resource "aws_security_group" "ec2_sg" {
   name   = "karuna-ec2-sg"
   vpc_id = data.aws_vpc.default.id
@@ -57,7 +88,6 @@ resource "aws_security_group" "ec2_sg" {
   }
 }
 
-# RDS SG → Only allow EC2
 resource "aws_security_group" "rds_sg" {
   name   = "karuna-rds-sg"
   vpc_id = data.aws_vpc.default.id
@@ -100,7 +130,6 @@ resource "aws_db_instance" "karuna_strapi" {
   password               = var.db_password
   db_name                = var.db_name
   port                   = 5432
-
   publicly_accessible    = false
   skip_final_snapshot    = true
 
@@ -119,7 +148,7 @@ resource "aws_instance" "karuna_strapi_ec2" {
   vpc_security_group_ids      = [aws_security_group.ec2_sg.id]
   key_name                    = var.key_name
 
-  iam_instance_profile        = "ec2-ecr-access-role "
+  iam_instance_profile        = aws_iam_instance_profile.strapi_profile.name
 
   associate_public_ip_address = true
 
@@ -133,6 +162,7 @@ resource "aws_instance" "karuna_strapi_ec2" {
   })
 
   depends_on = [
+    aws_iam_instance_profile.strapi_profile,
     aws_db_instance.karuna_strapi
   ]
 
