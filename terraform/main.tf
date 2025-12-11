@@ -11,9 +11,10 @@ provider "aws" {
   region = var.region
 }
 
-# -------------------------------
+# --------------------------------------------------
 # DATA SOURCES
-# -------------------------------
+# --------------------------------------------------
+
 data "aws_vpc" "default" {
   default = true
 }
@@ -25,42 +26,13 @@ data "aws_subnets" "default" {
   }
 }
 
-# -------------------------------
-# IAM ROLE FOR EC2
-# -------------------------------
-resource "aws_iam_role" "ec2_role" {
-  name = "karuna_strapi-ec2-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Principal = { Service = "ec2.amazonaws.com" }
-      Action    = "sts:AssumeRole"
-    }]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "ecr_read" {
-  role       = aws_iam_role.ec2_role.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
-}
-
-resource "aws_iam_role_policy_attachment" "ssm_core" {
-  role       = aws_iam_role.ec2_role.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
-}
-
-resource "aws_iam_instance_profile" "ec2_profile" {
-  name = "karuna-strapi-ec2-profile"
-  role = aws_iam_role.ec2_role.name
-}
-
-# -------------------------------
+# --------------------------------------------------
 # SECURITY GROUPS
-# -------------------------------
+# --------------------------------------------------
+
+# EC2 SG
 resource "aws_security_group" "ec2_sg" {
-  name   = "karunastrapi-ec2-sg"
+  name   = "karuna-ec2-sg"
   vpc_id = data.aws_vpc.default.id
 
   ingress {
@@ -85,8 +57,9 @@ resource "aws_security_group" "ec2_sg" {
   }
 }
 
+# RDS SG → Only allow EC2
 resource "aws_security_group" "rds_sg" {
-  name   = "karunastrapi-rds-sg"
+  name   = "karuna-rds-sg"
   vpc_id = data.aws_vpc.default.id
 
   ingress {
@@ -104,17 +77,19 @@ resource "aws_security_group" "rds_sg" {
   }
 }
 
-# -------------------------------
+# --------------------------------------------------
 # RDS SUBNET GROUP
-# -------------------------------
-resource "aws_db_subnet_group" "karuna_strapi_subnet" {
-  name       = "strapi-db-subnet"
+# --------------------------------------------------
+
+resource "aws_db_subnet_group" "strapi_subnet" {
+  name       = "karuna-strapi-subnet"
   subnet_ids = data.aws_subnets.default.ids
 }
 
-# -------------------------------
+# --------------------------------------------------
 # RDS INSTANCE
-# -------------------------------
+# --------------------------------------------------
+
 resource "aws_db_instance" "karuna_strapi" {
   identifier             = var.db_identifier
   allocated_storage      = 20
@@ -126,23 +101,26 @@ resource "aws_db_instance" "karuna_strapi" {
   db_name                = var.db_name
   port                   = 5432
 
-  db_subnet_group_name   = aws_db_subnet_group.karuna_strapi_subnet.name
-  vpc_security_group_ids = [aws_security_group.rds_sg.id]
-
-  skip_final_snapshot    = true
   publicly_accessible    = false
+  skip_final_snapshot    = true
+
+  db_subnet_group_name   = aws_db_subnet_group.strapi_subnet.name
+  vpc_security_group_ids = [aws_security_group.rds_sg.id]
 }
 
-# -------------------------------
+# --------------------------------------------------
 # EC2 INSTANCE
-# -------------------------------
+# --------------------------------------------------
+
 resource "aws_instance" "karuna_strapi_ec2" {
   ami                         = var.ami_id
   instance_type               = var.instance_type
   subnet_id                   = data.aws_subnets.default.ids[0]
   vpc_security_group_ids      = [aws_security_group.ec2_sg.id]
   key_name                    = var.key_name
-  iam_instance_profile        = aws_iam_instance_profile.ec2_profile.name
+
+  iam_instance_profile        = var.existing_instance_profile
+
   associate_public_ip_address = true
 
   user_data = templatefile("${path.module}/user-data.sh.tpl", {
@@ -155,8 +133,7 @@ resource "aws_instance" "karuna_strapi_ec2" {
   })
 
   depends_on = [
-    aws_db_instance.karuna_strapi,
-    aws_iam_instance_profile.ec2_profile
+    aws_db_instance.karuna_strapi
   ]
 
   tags = {
