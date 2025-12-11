@@ -10,7 +10,7 @@ variable "key_name"       { default = "kkey-vot" }
 
 
 variable "ecr_image" {
-  default = "713881818561..dkr.ecr.ap-south-1.amazonaws.com/karuna-strapi:latest"
+  default = "713881818561.dkr.ecr.ap-south-1.amazonaws.com/karuna-strapi:latest"
 }
 
 variable "db_identifier"     { default = "karuna-db" }
