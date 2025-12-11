@@ -4,7 +4,11 @@ FROM node:20-slim AS builder
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm install
+
+# Install pg + pg-hstore (Strapi Postgres drivers)
+RUN npm install pg pg-hstore
+
+RUN npm ci --production=false
 
 COPY . .
 RUN npm run build
