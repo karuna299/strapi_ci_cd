@@ -29,7 +29,7 @@ data "aws_subnets" "default" {
 # IAM ROLE FOR EC2
 # -------------------------------
 resource "aws_iam_role" "ec2_role" {
-  name = "strapi-ec2-role"
+  name = "karuna_strapi-ec2-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
