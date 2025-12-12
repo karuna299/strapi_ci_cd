@@ -153,12 +153,15 @@ resource "aws_instance" "karuna_strapi_ec2" {
   associate_public_ip_address = true
 
   user_data = templatefile("${path.module}/user-data.sh.tpl", {
-    region      = var.region
-    db_endpoint = aws_db_instance.karuna_strapi.address
-    db_name     = var.db_name
-    db_user     = var.db_username
-    db_pass     = var.db_password
-    ecr_image   = var.ecr_image
+    region            = var.region
+    db_endpoint       = aws_db_instance.karuna_strapi.address
+    db_name           = var.db_name
+    db_user           = var.db_username
+    db_pass           = var.db_password
+    ecr_image         = var.ecr_image
+    admin_jwt_secret  = var.admin_jwt_secret
+    api_token_salt    = var.api_token_salt
+    app_keys          = var.app_keys
   })
 
   depends_on = [

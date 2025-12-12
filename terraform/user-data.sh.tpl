@@ -30,4 +30,7 @@ docker run -d -p 1337:1337 --name strapi \
   -e DATABASE_PASSWORD=${db_pass} \
   -e DATABASE_SSL=true \
   -e DATABASE_SSL_REJECT_UNAUTHORIZED=false \
+  -e ADMIN_JWT_SECRET="${admin_jwt_secret}" \
+  -e API_TOKEN_SALT="${api_token_salt}" \
+  -e APP_KEYS="${app_keys}" \
   ${ecr_image}
